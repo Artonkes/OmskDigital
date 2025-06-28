@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 import uvicorn
 
-from shema import CollegeShema
+from schema import CollegeShema
 from DataBase.crud import setup_database
 from DataBase.database import SessionDepend
 from DataBase.Model import CollegeModel
