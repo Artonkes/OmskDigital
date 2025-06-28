@@ -1,0 +1,1 @@
+database_college = "sqlite+aiosqlite:///College.db"
