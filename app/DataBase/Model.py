@@ -1,6 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-
 class Base(DeclarativeBase):
     pass
 
@@ -10,10 +9,8 @@ class CollegeModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str]
     bio: Mapped[str]
-    max_ball: Mapped[int]
-    min_ball: Mapped[int]
-    paid_places: Mapped[int]
-    free_places: Mapped[int]
+    training_time: Mapped[int]
+    directions: Mapped[str]
 
 class VacancyModel(Base):
     __tablename__ = "Vacancy"
@@ -21,9 +18,17 @@ class VacancyModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str]
     bio: Mapped[str]
-    work_experience: Mapped[int]
-    schedule: Mapped[str]
-    work_format: Mapped[str]
-    salary: Mapped[int]
     city: Mapped[str]
+    salary: Mapped[int]
+    company_name: Mapped[str]
 
+class CompanyModel(Base):
+    __tablename__ = "Company"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str]
+    target: Mapped[str]
+    logo: Mapped[str]
+    contacts: Mapped[str]
+    type_company: Mapped[str]
+    quantity: Mapped[int]

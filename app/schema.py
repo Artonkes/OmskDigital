@@ -1,18 +1,32 @@
 from pydantic import BaseModel
+from typing import List
 
-class CollegeShema(BaseModel):
+class DirectionSchema(BaseModel):
+    DirectionName: str
+
+    class Config:
+        from_attributes = True
+
+class CollegeSchema(BaseModel):
+    name: str
+    bio: str | None
+    training_time: int | None
+    directions: List[DirectionSchema]
+
+    class Config:
+        from_attributes = True
+
+class VacancySchema(BaseModel):
     name: str
     bio: str
-    max_ball: int
-    min_ball: int
-    paid_places: int
-    free_places: int
-
-class VacancyShema(BaseModel):
-    name: str
-    bio: str
-    work_experience: int
-    schedule: str
-    work_format: str
     salary: int
     city: int
+    company_name: str
+
+class CompanySchema(BaseModel):
+    name: str
+    target: str
+    logo: str
+    contacts: str
+    type_company: str
+    quantity: int

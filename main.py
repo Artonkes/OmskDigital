@@ -1,7 +1,10 @@
-from fastapi import FastAPI, HTTPException
-import sqlite3
+from fastapi import FastAPI
 import uvicorn
-import bcrypt
+from app.AdminPanel import AdminRouter
+
+app = FastAPI()
+
+app.include_router(AdminRouter)
 
 if __name__ == '__main__':
-    pass
+    uvicorn.run("main:app", reload=True)
