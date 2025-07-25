@@ -25,8 +25,16 @@ class VacancySchema(BaseModel):
 
 class CompanySchema(BaseModel):
     name: str
-    target: str
-    logo: str
-    contacts: str
+    bio_min: str
+    bio_max: str
+    geo: str
+    url_company: str
+    contact: str
     type_company: str
-    quantity: int
+    number: int
+    off_name: str
+    main_people: str
+    # icon_company: str
+
+    class Config:
+        from_attributes  = True

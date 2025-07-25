@@ -1,9 +1,4 @@
-database_college = "sqlite+aiosqlite:///College.db"
-
-post_conn = "postgresql://artonkes:12345@localhost:5432/omskdigital"
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 class Settings(BaseSettings):
     DB_HOST: str
@@ -15,7 +10,7 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self):
         # postgresql+asyncpg://postgres:postgres@localhost:5432/sa
-        return f"postgresql://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     model_config = SettingsConfigDict(env_file=".env")
 
