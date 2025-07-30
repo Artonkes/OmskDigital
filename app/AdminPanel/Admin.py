@@ -1,13 +1,13 @@
+import base64
 from typing import List
-
-from fastapi import HTTPException, APIRouter, UploadFile, File, Depends
 from sqlalchemy import select, update
+from fastapi import HTTPException, APIRouter, UploadFile, File, Depends
 
 
-from app.DataBase.crud import setup_database, delete_setup, update_setup, upload_image
 from app.DataBase.database import SessionDepend
 from app.schema import CollegeSchema, VacancySchema, CompanySchema
 from app.DataBase.Model import CollegeModel, VacancyModel, CompanyModel
+from app.DataBase.crud import setup_database, delete_setup, update_setup, upload_img, uploads_images
 
 router = APIRouter(
     prefix="/method",
@@ -61,7 +61,8 @@ async def get_company_id(session: SessionDepend, company_id: int):
             CompanyModel.icon_company,
             CompanyModel.type_company,
             CompanyModel.number,
-            CompanyModel.url_company
+            CompanyModel.url_company,
+
         ).where(CompanyModel.id == company_id)
         result = await session.execute(query)
         row = result.first()
@@ -81,22 +82,28 @@ async def get_company_id(session: SessionDepend, company_id: int):
         raise HTTPException(status_code=500, detail=f"Error to return: {str(e)}")
 
 @router.post("/api/admin/company/", summary="Добавление компаний")
-async def add_company(session: SessionDepend, company: CompanySchema = Depends(), file: UploadFile = File(...)):
-    icon_path = await upload_image(file=file, NameSetup=company.name)
+async def add_company(session: SessionDepend, company: CompanySchema = Depends(),
+                      icon: UploadFile = File(...), photo_company: UploadFile = File(...), project_photo: UploadFile = File(...)):
+
+    icon = await upload_img(file=icon,NameDIR="ICON" , NameSetup=company.name)
+    photo_company = await upload_img(file=photo_company,NameDIR="PHOTO COMPANY", NameSetup=company.name)
+    project_photo = await upload_img(file=project_photo, NameDIR="PROJECT", NameSetup=company.name)
 
     new_company = CompanyModel(
         name=company.name,
+        icon=icon,
         bio_min=company.bio_min,
         bio_max=company.bio_max,
+        keywords=company.keywords,
+        target=company.target,
         geo=company.geo,
-        icon_company=icon_path,
-        url_company=company.url_company,
+        use_technology=company.use_technology,
         contact=company.contact,
-        type_company=company.type_company,
-        use_technologists=company.url_company,
-        number=company.number,
-        off_name=company.off_name,
-        main_people=company.main_people
+        official_name=company.official_name,
+        founding_data=company.founding_data,
+        project=company.project,
+        project_photo=project_photo,
+        photo_company=photo_company
     )
 
     session.add(new_company)
@@ -105,7 +112,9 @@ async def add_company(session: SessionDepend, company: CompanySchema = Depends()
 
 
 @router.put("/api/admin/update_company/{id_company}", summary="Обновление компании", response_model=CompanySchema)
-async def update_company(id_company: int, session: SessionDepend, company: CompanySchema = Depends(), file: UploadFile = File(...)):
+async def update_company(id_company: int, session: SessionDepend, company: CompanySchema = Depends(),
+                         icon: UploadFile = File(...), photo_company: UploadFile = File(...)):
+
     return await update_setup(
         id_setup=id_company,
         session=session,

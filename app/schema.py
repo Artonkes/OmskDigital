@@ -1,20 +1,17 @@
 from pydantic import BaseModel
 from typing import List
+from fastapi import Form
 
-class DirectionSchema(BaseModel):
-    DirectionName: str
-
-    class Config:
-        from_attributes = True
+class ContactShema(BaseModel):
+    NumberPhone: str
+    email: str
+    vk: str
+    tg: str
 
 class CollegeSchema(BaseModel):
     name: str
     bio: str | None
     training_time: int | None
-    directions: List[DirectionSchema]
-
-    class Config:
-        from_attributes = True
 
 class VacancySchema(BaseModel):
     name: str
@@ -24,17 +21,19 @@ class VacancySchema(BaseModel):
     company_name: str
 
 class CompanySchema(BaseModel):
-    name: str
-    bio_min: str
-    bio_max: str
-    geo: str
-    url_company: str
-    contact: str
-    type_company: str
-    number: int
-    off_name: str
-    main_people: str
-    # icon_company: str
+    name: str = Form(...)
+    # icon: str = Form(...)
+    bio_min: str = Form(...)
+    bio_max: str = Form(...)
+    keywords: str = Form(...)
+    target: str = Form(...)
+    geo: str = Form(...)
+    use_technology: str = Form(...)
+    contact: List[ContactShema] = Form(...)
+    official_name: str = Form(...)
+    founding_data: str = Form(...)
+    project: str = Form(...)
+    # photo_company: str = Form(...)
 
     class Config:
         from_attributes  = True

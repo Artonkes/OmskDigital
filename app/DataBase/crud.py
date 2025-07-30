@@ -38,11 +38,11 @@ async def upload_image(file, NameSetup: str):
     return str(f"app/Img Company/{NameSetup}/{unique_filename}")
 
 
-async def upload_images(file, NameSetup: str):
+async def upload_img(file, NameDIR, NameSetup: str):
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
 
-    DIR = f"app/Img Company/{NameSetup}"
+    DIR = f"app/Img Company/{NameSetup}/{NameDIR}"
     os.makedirs(DIR, exist_ok=True)
 
     if not file.content_type.startswith("image/"):
@@ -55,8 +55,26 @@ async def upload_images(file, NameSetup: str):
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
-    return str(f"app/Img Company/{NameSetup}/{unique_filename}")
+    return str(f"app/Img Company/{NameSetup}/{NameDIR}/{unique_filename}")
 
+async def uploads_images(file, NameDIR, NameSetup: str):
+    if not file:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+
+    DIR = f"app/Img Company/{NameSetup}/{NameDIR}"
+    os.makedirs(DIR, exist_ok=True)
+
+    encode_imgs = []
+    for file in file:
+        filename = file.filename
+        unique_filename = f"{filename}"
+        file_path = os.path.join(DIR, unique_filename)
+
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+            encode_imgs.append(f"app/Img Company/{NameSetup}/{NameDIR}/{unique_filename}")
+
+    return encode_imgs
 
 async def delete_setup(id_setup, session, SetupModel):
     try:
@@ -75,10 +93,10 @@ async def delete_setup(id_setup, session, SetupModel):
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Error to delete: {str(e)}")
 
+
 async def update_setup(id_setup, session, SetupModel, setup_schema):
     try:
-        query = select(SetupModel).where(SetupModel.id == id_setup)
-        result = await session.execute(query)
+        result = await session.execute(select(SetupModel).where(SetupModel.id == id_setup))
         obj = result.scalar_one_or_none()
 
         if obj is None:
