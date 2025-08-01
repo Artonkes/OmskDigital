@@ -1,12 +1,12 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from fastapi import Form
 
 class ContactShema(BaseModel):
-    NumberPhone: str
-    email: str
-    vk: str
-    tg: str
+    NumberPhone: str = Form(...)
+    email: str = Form(...)
+    vk: str = Form(...)
+    tg: str = Form(...)
 
 class CollegeSchema(BaseModel):
     name: str
@@ -22,18 +22,22 @@ class VacancySchema(BaseModel):
 
 class CompanySchema(BaseModel):
     name: str = Form(...)
-    # icon: str = Form(...)
     bio_min: str = Form(...)
     bio_max: str = Form(...)
     keywords: str = Form(...)
     target: str = Form(...)
     geo: str = Form(...)
     use_technology: str = Form(...)
-    contact: List[ContactShema] = Form(...)
+    contact: str = Form(...)
+    contact_tg: Optional[str] = Form(default=None)
+    contact_vk: Optional[str] = Form(default=None)
     official_name: str = Form(...)
     founding_data: str = Form(...)
     project: str = Form(...)
-    # photo_company: str = Form(...)
+
+    icon: Optional[str] = None
+    photo_company: Optional[str] = None
+    project_photo: Optional[str] = None
 
     class Config:
         from_attributes  = True

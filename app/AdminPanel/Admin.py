@@ -66,7 +66,8 @@ async def get_company_id(session: SessionDepend, company_id: int):
             CompanyModel.founding_data,
             CompanyModel.use_technology,
             CompanyModel.project,
-            CompanyModel.project_photo
+            CompanyModel.project_photo,
+            CompanyModel.photo_company
         ).where(CompanyModel.id == company_id)
 
         result = await session.execute(query)
@@ -102,6 +103,7 @@ async def get_company_id(session: SessionDepend, company_id: int):
                         "project_photo": row["project_photo"],
                         "project": row["project"]
                     },
+                    "photo_company": row["photo_company"].split(",") if row["photo_company"] else None,
                 }
             }
         ]
@@ -114,11 +116,11 @@ async def get_company_id(session: SessionDepend, company_id: int):
 @router.post("/api/admin/company/", summary="Добавление компаний")
 async def add_company(session: SessionDepend, company: CompanySchema = Depends(),
                       icon: UploadFile = File(...),
-                      photo_company: UploadFile = File(...),
+                      photo_company: List[UploadFile] = File(...),
                       project_photo: UploadFile = File(...)):
 
     icon = await upload_img(file=icon,NameDIR="ICON" , NameSetup=company.name)
-    photo_company = await upload_img(file=photo_company,NameDIR="PHOTO COMPANY", NameSetup=company.name)
+    photo_company = await uploads_images(file=photo_company,NameDIR="PHOTO COMPANY", NameSetup=company.name)
     project_photo = await upload_img(file=project_photo, NameDIR="PROJECT", NameSetup=company.name)
 
     new_company = CompanyModel(
@@ -135,7 +137,9 @@ async def add_company(session: SessionDepend, company: CompanySchema = Depends()
         founding_data=company.founding_data,
         project=company.project,
         project_photo=project_photo,
-        photo_company=photo_company
+        photo_company=photo_company,
+        contact_tg=company.contact_tg,
+        contact_vk=company.contact_vk
     )
 
     session.add(new_company)
@@ -145,14 +149,13 @@ async def add_company(session: SessionDepend, company: CompanySchema = Depends()
 
 @router.put("/api/admin/update_company/{id_company}", summary="Обновление компании")
 async def update_company(id_company: int, session: SessionDepend, company: CompanySchema = Depends(),
-                          icon: UploadFile = File(...),
-                          photo_company: UploadFile = File(...),
-                          project_photo: UploadFile = File(...)
-                         ):
-
+    icon: UploadFile = File(...),
+    photo_company: List[UploadFile] = File(...),
+    project_photo: UploadFile = File(...)
+):
     try:
         icon = await upload_img(file=icon,NameDIR="ICON" , NameSetup=company.name)
-        photo_company = await upload_img(file=photo_company,NameDIR="PHOTO COMPANY", NameSetup=company.name)
+        photo_company = await uploads_images(file=photo_company,NameDIR="PHOTO COMPANY", NameSetup=company.name)
         project_photo = await upload_img(file=project_photo, NameDIR="PROJECT", NameSetup=company.name)
 
         if icon:
@@ -181,8 +184,3 @@ async def update_company(id_company: int, session: SessionDepend, company: Compa
 @router.delete("/api/admin/delete_company/{id_company}", summary="Удаление компаний")
 async def delete_company(id_company: int, session: SessionDepend):
     return await delete_setup(id_setup=id_company, session=session, SetupModel=CompanyModel)
-
-
-"EEEEEEEE"
-
-
