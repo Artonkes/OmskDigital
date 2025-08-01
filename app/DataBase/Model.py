@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import ForeignKey, JSON
+from sqlalchemy import ForeignKey, JSON, BLOB
 from typing import List
 
 class Base(DeclarativeBase):
@@ -37,8 +37,10 @@ class CompanyModel(Base):
     geo: Mapped[str] = mapped_column(nullable=True)
     use_technology: Mapped[str] = mapped_column(nullable=True)
     contact: Mapped[str] = mapped_column(nullable=True)
+    contact_tg: Mapped[str] = mapped_column(nullable=True)
+    contact_vk: Mapped[str] = mapped_column(nullable=True)
     official_name: Mapped[str] = mapped_column(nullable=True)
     founding_data: Mapped[str] = mapped_column(nullable=True)
     project: Mapped[str] = mapped_column(nullable=True)
     project_photo: Mapped[str] = mapped_column(nullable=True)
-    photo_company: Mapped[str] = mapped_column(nullable=True)
+    photo_company: Mapped[str] = mapped_column(JSON, nullable=True)
