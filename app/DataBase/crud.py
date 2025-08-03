@@ -1,9 +1,11 @@
 import os
+import shutil
 import uuid
 
 from sqlalchemy import select, update
 from fastapi import HTTPException
 
+from app.DataBase.Model import CompanyModel, ProjectCompanyModel
 from app.DataBase.database import engine
 from app.DataBase.Model import Base
 
@@ -39,6 +41,7 @@ async def upload_img(file, NameDIR, NameSetup):
 
     return str(f"app/Img Company/{NameSetup}/{NameDIR}/{unique_filename}")
 
+
 async def uploads_images(file, NameDIR, NameSetup: str):
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
@@ -58,18 +61,38 @@ async def uploads_images(file, NameDIR, NameSetup: str):
 
     return encode_imgs
 
+
 async def delete_setup(id_setup, session, SetupModel):
     try:
         query = select(SetupModel).where(SetupModel.id == id_setup)
         result = await session.execute(query)
         object_setup = result.scalar_one_or_none()
-        
+
         if object_setup is None:
             raise HTTPException(status_code=404, detail=f"Id is not found")
 
+
+        if SetupModel == CompanyModel:
+
+            projects_query = select(ProjectCompanyModel).where(
+                (ProjectCompanyModel.id_company == id_setup) |
+                (ProjectCompanyModel.name_company == object_setup.name)
+            )
+            projects_result = await session.execute(projects_query)
+            projects = projects_result.scalars().all()
+
+            for project in projects:
+                await session.delete(project)
+
+            company_folder = f"app/Img Company/{object_setup.name}"
+            if os.path.exists(company_folder):
+                try:
+                    shutil.rmtree(company_folder)
+                except Exception as folder_error:
+                    print(f"Предупреждение: не удалось удалить папку {company_folder}: {folder_error}")
+
         await session.delete(object_setup)
         await session.commit()
-        return {"detail": f"{id_setup} delete"}
 
     except Exception as e:
         await session.rollback()

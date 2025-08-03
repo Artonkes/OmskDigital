@@ -1,11 +1,12 @@
 import os
 from typing import List
+
 from sqlalchemy import select
 from fastapi import HTTPException, APIRouter, UploadFile, File, Depends
 
 from app.DataBase.database import SessionDepend
-from app.schema import CollegeSchema, VacancySchema, CompanySchema, ContactShema
-from app.DataBase.Model import CollegeModel, VacancyModel, CompanyModel
+from app.schema import CompanySchema, ProjectCompanySchema
+from app.DataBase.Model import CompanyModel, ProjectCompanyModel
 from app.DataBase.crud import setup_database, delete_setup, update_setup, upload_img, uploads_images
 
 router = APIRouter(
@@ -21,7 +22,7 @@ async def create_table():
 
 
 #Company
-@router.get("/api/admin/get_company", summary="Вывод всех компаний")
+@router.get("/api/admin/get_company", summary="Get all companies")
 async def get_company(session: SessionDepend):
     try:
         query = select(
@@ -39,7 +40,7 @@ async def get_company(session: SessionDepend):
                 "id": row.id,
                 "name": row.name,
                 "icon_company": row.icon,
-                "keyword": row.keywords,
+                "keyword": row.keywords.split(",") if row.keywords else None,
                 "bio_min": row.bio_min
             }
             for row in result
@@ -50,7 +51,8 @@ async def get_company(session: SessionDepend):
     except HTTPException:
         raise HTTPException(status_code=404, detail=f"Error")
 
-@router.get("/api/admin/get_company/{company_id}", summary="Вывод компании по id")
+
+@router.get("/api/admin/get_company/{company_id}", summary="Get company by id")
 async def get_company_id(session: SessionDepend, company_id: int):
     try:
         query = select(
@@ -65,8 +67,6 @@ async def get_company_id(session: SessionDepend, company_id: int):
             CompanyModel.official_name,
             CompanyModel.founding_data,
             CompanyModel.use_technology,
-            CompanyModel.project,
-            CompanyModel.project_photo,
             CompanyModel.photo_company
         ).where(CompanyModel.id == company_id)
 
@@ -78,85 +78,125 @@ async def get_company_id(session: SessionDepend, company_id: int):
 
         row = row._mapping
 
-        return [
-            {
-                "Minimum set for cards": {
-                    "name": row["name"],
-                    "target": row["target"],
-                    "min_bio": row["bio_min"],
-                    "icon": row["icon"],
-                    "use_technology": row["use_technology"],
-                    "contact": row["contact"],
-                },
-                "Maximum set for cards": {
-                    "name": row["name"],
-                    "icon": row["icon"],
-                    "target": row["target"],
-                    "keywords": row["keywords"].split(",") if row["keywords"] else None,
-                    "min_bio": row["bio_min"],
-                    "max_bio": row["bio_max"],
-                    "contact": row["contact"],
-                    "geo": row["geo"],
-                    "official_name": row["official_name"],
-                    "founding_data": row["founding_data"],
-                    "project": {
-                        "project_photo": row["project_photo"],
-                        "project": row["project"]
-                    },
-                    "photo_company": row["photo_company"].split(",") if row["photo_company"] else None,
+        project_query = select(
+            ProjectCompanyModel.id,
+            ProjectCompanyModel.name_company,
+            ProjectCompanyModel.name_project,
+            ProjectCompanyModel.photo,
+        ).where(ProjectCompanyModel.id_company == company_id)
+
+        project_result = await session.execute(project_query)
+        project_rows = project_result.all()
+
+        projects = []
+        if project_rows:
+            projects = [
+                {
+                    "id": proj.id,
+                    "name_project": proj.name_project,
+                    "photo": proj.photo
                 }
+                for proj in project_rows
+            ]
+
+        return {
+            "Minimum set for cards": {
+                "name": row["name"],
+                "target": row["target"],
+                "min_bio": row["bio_min"],
+                "icon": row["icon"],
+                "use_technology": row["use_technology"],
+                "contact": row["contact"],
+            },
+            "Maximum set for cards": {
+                "name": row["name"],
+                "icon": row["icon"],
+                "target": row["target"],
+                "keywords": row["keywords"].split(",") if row["keywords"] else None,
+                "min_bio": row["bio_min"],
+                "max_bio": row["bio_max"],
+                "contact": row["contact"],
+                "geo": row["geo"],
+                "official_name": row["official_name"],
+                "founding_data": row["founding_data"],
+                "projects": projects,
+                "photo_company": row["photo_company"],
             }
-        ]
+        }
 
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Error while retrieving company data: {str(e)}")
 
-
-@router.post("/api/admin/company/", summary="Добавление компаний")
+@router.post("/api/admin/company/", summary="Adding a company")
 async def add_company(session: SessionDepend, company: CompanySchema = Depends(),
-                      icon: UploadFile = File(...),
-                      photo_company: List[UploadFile] = File(...),
-                      project_photo: UploadFile = File(...)):
+        icon: UploadFile = File(...), photo_company: List[UploadFile] = File(...)):
+    try:
+        icon = await upload_img(file=icon, NameDIR="ICON", NameSetup=company.name)
+        photo_company = await uploads_images(file=photo_company, NameDIR="PHOTO COMPANY", NameSetup=company.name)
 
-    icon = await upload_img(file=icon,NameDIR="ICON" , NameSetup=company.name)
-    photo_company = await uploads_images(file=photo_company,NameDIR="PHOTO COMPANY", NameSetup=company.name)
-    project_photo = await upload_img(file=project_photo, NameDIR="PROJECT", NameSetup=company.name)
+        new_company = CompanyModel(
+            name=company.name,
+            icon=icon,
+            bio_min=company.bio_min,
+            bio_max=company.bio_max,
+            keywords=company.keywords,
+            target=company.target,
+            geo=company.geo,
+            use_technology=company.use_technology,
+            contact=company.contact,
+            official_name=company.official_name,
+            founding_data=company.founding_data,
+            photo_company=photo_company,
+            contact_tg=company.contact_tg,
+            contact_vk=company.contact_vk
+        )
 
-    new_company = CompanyModel(
-        name=company.name,
-        icon=icon,
-        bio_min=company.bio_min,
-        bio_max=company.bio_max,
-        keywords=company.keywords,
-        target=company.target,
-        geo=company.geo,
-        use_technology=company.use_technology,
-        contact=company.contact,
-        official_name=company.official_name,
-        founding_data=company.founding_data,
-        project=company.project,
-        project_photo=project_photo,
-        photo_company=photo_company,
-        contact_tg=company.contact_tg,
-        contact_vk=company.contact_vk
-    )
+        session.add(new_company)
+        await session.commit()
+        return {"detail": "Company add"}
 
-    session.add(new_company)
-    await session.commit()
-    return {"detail": "Company appended"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error is: {e}")
 
 
-@router.put("/api/admin/update_company/{id_company}", summary="Обновление компании")
+@router.post("/api/admin/company/project/")
+async def adding_project(session: SessionDepend, project: ProjectCompanySchema = Depends(), project_photo: UploadFile = File(...)):
+    try:
+        company_query = select(CompanyModel).where(CompanyModel.name == project.name_company).where(CompanyModel.id == project.id_company)
+        company_result = await session.execute(company_query)
+        company = company_result.scalar_one_or_none()
+        
+        if company is None:
+            raise HTTPException(status_code=404, detail="Company not found")
+        
+        project_photo = await upload_img(file=project_photo, NameDIR="PROJECT", NameSetup=project.name_company)
+
+        new_project = ProjectCompanyModel(
+            id_company=project.id_company,
+            name_company=project.name_company,
+            name_project=project.name_project,
+            photo=project_photo,
+        )
+
+        session.add(new_project)
+        await session.commit()
+
+        return {"detail": "Project appended"}
+
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Error is: {e}")
+
+
+@router.put("/api/admin/update_company/{id_company}", summary="Update company")
 async def update_company(id_company: int, session: SessionDepend, company: CompanySchema = Depends(),
     icon: UploadFile = File(...),
     photo_company: List[UploadFile] = File(...),
-    project_photo: UploadFile = File(...)
 ):
     try:
         icon = await upload_img(file=icon,NameDIR="ICON" , NameSetup=company.name)
         photo_company = await uploads_images(file=photo_company,NameDIR="PHOTO COMPANY", NameSetup=company.name)
-        project_photo = await upload_img(file=project_photo, NameDIR="PROJECT", NameSetup=company.name)
 
         if icon:
             if company.icon and os.path.exists(company.icon):
@@ -168,19 +208,39 @@ async def update_company(id_company: int, session: SessionDepend, company: Compa
                 os.remove(f"app/Img Company/{company.name}/PHOTO COMPANY/{company.photo_company}")
             company.photo_company = photo_company
 
-        if project_photo:
-            if company.project_photo and os.path.exists(company.project_photo):
-                os.remove(f"app/Img Company/{company.name}/PROJECT/{company.project_photo}")
-            company.project_photo = project_photo
-
         await update_setup(id_setup=id_company, session=session, SetupModel=CompanyModel, setup_schema=company)
+
         return {"detail": "Company updated"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error is {e}")
+        raise HTTPException(status_code=500, detail=f"Error is: {e}")
+
+
+@router.put("/api/admin/update_company/project/{id_project}", summary="Update project company")
+async def update_project(id_project: int, session: SessionDepend, project: ProjectCompanySchema = Depends(),
+    project_photo: UploadFile = File(...)):
+    try:
+        project_photo = await upload_img(file=project_photo, NameDIR="PROJECT", NameSetup=project.name_project)
+
+        if project_photo:
+            if project.photo and os.path.exists(project.photo):
+                os.remove(f"app/Img Company/{project.name_company}/PROJECT/{project.photo}")
+            project.photo = project_photo
+        
+        await update_setup(id_setup=id_project, session=session, SetupModel=ProjectCompanyModel, setup_schema=project)
+
+        return {"detail": "Project updated"}
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error is: {e}")
 
 
-@router.delete("/api/admin/delete_company/{id_company}", summary="Удаление компаний")
+@router.delete("/api/admin/delete_company/{id_company}", summary="Delete to company")
 async def delete_company(id_company: int, session: SessionDepend):
-    return await delete_setup(id_setup=id_company, session=session, SetupModel=CompanyModel)
+    try:
+        await delete_setup(id_setup=id_company, session=session, SetupModel=CompanyModel)
+        await session.commit()
+        return {"detail": "Company deleted"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error is: {e}")

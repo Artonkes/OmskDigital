@@ -1,28 +1,10 @@
+from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import ForeignKey, JSON, BLOB
-from typing import List
+
 
 class Base(DeclarativeBase):
     pass
 
-class CollegeModel(Base):
-    __tablename__ = "College"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str]
-    bio: Mapped[str]
-    training_time: Mapped[int]
-    directions: Mapped[str]
-
-class VacancyModel(Base):
-    __tablename__ = "Vacancy"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str]
-    bio: Mapped[str]
-    city: Mapped[str]
-    salary: Mapped[int]
-    company_name: Mapped[str]
 
 class CompanyModel(Base):
     __tablename__ = "Company"
@@ -41,6 +23,14 @@ class CompanyModel(Base):
     contact_vk: Mapped[str] = mapped_column(nullable=True)
     official_name: Mapped[str] = mapped_column(nullable=True)
     founding_data: Mapped[str] = mapped_column(nullable=True)
-    project: Mapped[str] = mapped_column(nullable=True)
-    project_photo: Mapped[str] = mapped_column(nullable=True)
     photo_company: Mapped[str] = mapped_column(JSON, nullable=True)
+
+
+class ProjectCompanyModel(Base):
+    __tablename__ = "ProjectCompany"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id_company: Mapped[int] = mapped_column()
+    name_company: Mapped[str] = mapped_column()
+    name_project: Mapped[str] = mapped_column()
+    photo: Mapped[str] = mapped_column()
