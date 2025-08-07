@@ -12,6 +12,7 @@ class CompanySchema(BaseModel):
     keywords: str = Form(...)
     target: Optional[str] = Form(default=None)
     geo: str = Form(...)
+    coordinates: str = Form(...)
     use_technology: str = Form(...)
     contact_number_phone: str = Form(...)
     contact_email: str = Form(...)
