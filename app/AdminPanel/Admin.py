@@ -31,6 +31,8 @@ async def get_company(session: SessionDepend):
             CompanyModel.icon,
             CompanyModel.keywords,
             CompanyModel.bio_min,
+            CompanyModel.coordinates,
+            CompanyModel.geo,
         )
         rows = await session.execute(query)
         result = rows.all()
@@ -41,7 +43,9 @@ async def get_company(session: SessionDepend):
                 "name": row.name,
                 "icon_company": row.icon,
                 "keyword": row.keywords.split(",") if row.keywords else None,
-                "bio_min": row.bio_min
+                "bio_min": row.bio_min,
+                "coordinates": row.coordinates,
+                "geo": row.geo,
             }
             for row in result
         ]
