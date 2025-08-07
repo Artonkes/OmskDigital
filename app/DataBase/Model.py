@@ -1,4 +1,4 @@
-from sqlalchemy import JSON
+from sqlalchemy import JSON, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -18,7 +18,9 @@ class CompanyModel(Base):
     target: Mapped[str] = mapped_column(nullable=True)
     geo: Mapped[str] = mapped_column(nullable=True)
     use_technology: Mapped[str] = mapped_column(nullable=True)
-    contact: Mapped[str] = mapped_column(nullable=True)
+    contact_number_phone: Mapped[str] = mapped_column(nullable=True)
+    contact_email: Mapped[str] = mapped_column(nullable=True)
+    contact_site: Mapped[str] = mapped_column(nullable=True)
     contact_tg: Mapped[str] = mapped_column(nullable=True)
     contact_vk: Mapped[str] = mapped_column(nullable=True)
     official_name: Mapped[str] = mapped_column(nullable=True)
@@ -30,7 +32,6 @@ class ProjectCompanyModel(Base):
     __tablename__ = "ProjectCompany"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    id_company: Mapped[int] = mapped_column()
-    name_company: Mapped[str] = mapped_column()
+    id_company: Mapped[int] = mapped_column(ForeignKey("Company.id"))
     name_project: Mapped[str] = mapped_column()
-    photo: Mapped[str] = mapped_column()
+    photo: Mapped[str] = mapped_column(nullable=True)

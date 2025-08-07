@@ -74,10 +74,8 @@ async def delete_setup(id_setup, session, SetupModel):
 
         if SetupModel == CompanyModel:
 
-            projects_query = select(ProjectCompanyModel).where(
-                (ProjectCompanyModel.id_company == id_setup) |
-                (ProjectCompanyModel.name_company == object_setup.name)
-            )
+            projects_query = select(ProjectCompanyModel).where(ProjectCompanyModel.id_company == id_setup)
+
             projects_result = await session.execute(projects_query)
             projects = projects_result.scalars().all()
 
