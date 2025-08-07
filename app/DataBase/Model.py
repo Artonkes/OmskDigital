@@ -17,6 +17,7 @@ class CompanyModel(Base):
     keywords: Mapped[str] = mapped_column(nullable=True)
     target: Mapped[str] = mapped_column(nullable=True)
     geo: Mapped[str] = mapped_column(nullable=True)
+    coordinates: Mapped[str] = mapped_column(nullable=True)
     use_technology: Mapped[str] = mapped_column(nullable=True)
     contact_number_phone: Mapped[str] = mapped_column(nullable=True)
     contact_email: Mapped[str] = mapped_column(nullable=True)
