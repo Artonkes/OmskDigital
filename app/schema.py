@@ -1,39 +1,36 @@
-from pydantic import BaseModel
-from typing import List
 from fastapi import Form
+from pydantic import BaseModel
 
-class ContactShema(BaseModel):
-    NumberPhone: str
-    email: str
-    vk: str
-    tg: str
+from typing import  Optional
 
-class CollegeSchema(BaseModel):
-    name: str
-    bio: str | None
-    training_time: int | None
-
-class VacancySchema(BaseModel):
-    name: str
-    bio: str
-    salary: int
-    city: int
-    company_name: str
 
 class CompanySchema(BaseModel):
     name: str = Form(...)
-    # icon: str = Form(...)
+    official_name: str = Form(...)
     bio_min: str = Form(...)
     bio_max: str = Form(...)
     keywords: str = Form(...)
-    target: str = Form(...)
+    target: Optional[str] = Form(default=None)
     geo: str = Form(...)
+    coordinates: str = Form(...)
     use_technology: str = Form(...)
-    contact: List[ContactShema] = Form(...)
-    official_name: str = Form(...)
+    contact_number_phone: str = Form(...)
+    contact_email: str = Form(...)
+    contact_site: str = Form(...)
+    contact_tg: Optional[str] = Form(default=None)
+    contact_vk: Optional[str] = Form(default=None)
     founding_data: str = Form(...)
-    project: str = Form(...)
-    # photo_company: str = Form(...)
+
+    icon: Optional[str] = Form(default=None)
+    photo_company: Optional[str] = Form(default=None)
 
     class Config:
         from_attributes  = True
+
+class ProjectCompanySchema(BaseModel):
+    name_company: str  = Form(...)
+    name_project: str = Form(...)
+    photo: Optional[str] = Form(default=None)
+
+    class Config:
+        from_attributes = True
