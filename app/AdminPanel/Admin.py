@@ -14,14 +14,15 @@ router = APIRouter(
     tags=["AdminPanel"]
 )
 
-#DataBase
+
+# DataBase
 @router.post("/api/admin/create_table", summary="Create table")
 async def create_table():
     await setup_database()
     return {"detail": "Table to create"}
 
 
-#Company
+# Company
 @router.get("/api/admin/get_company", summary="Get all companies")
 async def get_company(session: SessionDepend):
     try:
@@ -41,7 +42,7 @@ async def get_company(session: SessionDepend):
             {
                 "id": row.id,
                 "name": row.name,
-                "icon_company": row.icon,
+                "icon   ": row.icon,
                 "keyword": row.keywords.split(",") if row.keywords else None,
                 "bio_min": row.bio_min,
                 "coordinates": row.coordinates,
@@ -113,7 +114,7 @@ async def get_company_id(session: SessionDepend, company_id: int):
                 "target": row["target"],
                 "min_bio": row["bio_min"],
                 "icon": row["icon"],
-                "use_technology": row["use_technology"].split(",") if row["keywords"] else None,
+                "use_technology": row["use_technology"].split(",") if row["use_technology"] else None,
                 "number_phone": row["contact_number_phone"],
                 "vk": row["contact_vk"],
                 "tg": row["contact_tg"],
@@ -143,9 +144,10 @@ async def get_company_id(session: SessionDepend, company_id: int):
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Error while retrieving company data: {str(e)}")
 
+
 @router.post("/api/admin/company/", summary="Adding a company")
 async def add_company(session: SessionDepend, company: CompanySchema = Depends(),
-        icon: UploadFile = File(...), photo_company: List[UploadFile] = File(...)):
+                      icon: UploadFile = File(...), photo_company: List[UploadFile] = File(...)):
     try:
         if icon:
             icon = await upload_img(file=icon, NameDIR="ICON", NameSetup=company.name)
@@ -164,6 +166,7 @@ async def add_company(session: SessionDepend, company: CompanySchema = Depends()
             keywords=company.keywords,
             target=company.target,
             geo=company.geo,
+            coordinates=company.coordinates,
             use_technology=company.use_technology,
             contact_number_phone=company.contact_number_phone,
             contact_email=company.contact_email,
@@ -185,12 +188,13 @@ async def add_company(session: SessionDepend, company: CompanySchema = Depends()
 
 
 @router.post("/api/admin/company/project/")
-async def adding_project(session: SessionDepend, project: ProjectCompanySchema = Depends(), project_photo: Optional[UploadFile] = File(default=None)):
+async def adding_project(session: SessionDepend, project: ProjectCompanySchema = Depends(),
+                         project_photo: Optional[UploadFile] = File(default=None)):
     try:
         company_query = select(CompanyModel).where(CompanyModel.name == project.name_company)
         company_result = await session.execute(company_query)
         company = company_result.scalar_one_or_none()
-        
+
         if company is None:
             raise HTTPException(status_code=404, detail="Company not found")
 
@@ -217,18 +221,17 @@ async def adding_project(session: SessionDepend, project: ProjectCompanySchema =
 
 @router.put("/api/admin/update_company/{id_company}", summary="Update company")
 async def update_company(id_company: int, session: SessionDepend, company: CompanySchema = Depends(),
-    icon: UploadFile = File(...),
-    photo_company: Optional[List[UploadFile]] = File(default=None),
-):
+                         icon: UploadFile = File(...),
+                         photo_company: Optional[List[UploadFile]] = File(default=None),
+                         ):
     try:
-        icon = await upload_img(file=icon,NameDIR="ICON" , NameSetup=company.name)
-        photo_company = await uploads_images(file=photo_company,NameDIR="PHOTO COMPANY", NameSetup=company.name)
+        icon = await upload_img(file=icon, NameDIR="ICON", NameSetup=company.name)
+        photo_company = await uploads_images(file=photo_company, NameDIR="PHOTO COMPANY", NameSetup=company.name)
 
         if icon:
             if company.icon and os.path.exists(company.icon):
                 os.remove(f"app/Img Company/{company.name}/ICON/{company.icon}")
             company.icon = icon
-
 
         if photo_company:
             if company.photo_company and os.path.exists(company.photo_company):
@@ -247,7 +250,7 @@ async def update_company(id_company: int, session: SessionDepend, company: Compa
 
 @router.put("/api/admin/update_company/project/{id_project}", summary="Update project company")
 async def update_project(id_project: int, session: SessionDepend, project: ProjectCompanySchema = Depends(),
-    project_photo: Optional[UploadFile] = File(default=None)):
+                         project_photo: Optional[UploadFile] = File(default=None)):
     try:
         project_photo = await upload_img(file=project_photo, NameDIR="PROJECT", NameSetup=project.name_company)
 
@@ -257,12 +260,11 @@ async def update_project(id_project: int, session: SessionDepend, project: Proje
             project.photo = project_photo
         else:
             pass
-        
+
         await update_setup(id_setup=id_project, session=session, SetupModel=ProjectCompanyModel, setup_schema=project)
 
-
         return {"detail": "Project updated"}
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error is: {e}")
 
