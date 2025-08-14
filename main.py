@@ -1,12 +1,12 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 import uvicorn
+from starlette.staticfiles import StaticFiles
 
-from app.AdminPanel import AdminRouter
+from app.admin import AdminRouter
 
 app = FastAPI()
-
-app.include_router(AdminRouter)
 
 origins = [
     "http://127.0.0.1:3000",
@@ -21,6 +21,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    from fastapi.exceptions import HTTPException
+    if isinstance(exc, HTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": exc.detail}
+        )
+    return JSONResponse(
+        status_code=500,
+        content={"error": f"Unexpected error: {exc}"}
+    )
+#TODO
+# app.mount("/media", StaticFiles(directory=""), name="media")
+
+app.include_router(AdminRouter)
 
 if __name__ == '__main__':
     uvicorn.run("main:app", reload=True)
